@@ -48,7 +48,7 @@ echo -n "====> Adding LB hosts entry in /etc/hosts.${CLUSTER_NAME}: "
     "api.${CLUSTER_NAME}.${BASE_DOM}" \
     "api-int.${CLUSTER_NAME}.${BASE_DOM}" >> /etc/hosts.${CLUSTER_NAME}; ok
 
-systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC failed";
+#systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC failed";
 
 echo -n "====> Waiting for SSH access on LB VM: "
 ssh-keygen -R lb.${CLUSTER_NAME}.${BASE_DOM} &> /dev/null || true
