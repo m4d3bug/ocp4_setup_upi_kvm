@@ -42,7 +42,7 @@ while true; do
             a_images+=( "${i}" )
         fi
     done
-    dones=($(ssh -i sshkey "core@bootstrap.${CLUSTER_NAME}.${BASE_DOM}" "ls /opt/openshift/*.done 2> /dev/null" )) || true
+    dones=($(ssh -i sshkey "core@$BSIP" "ls /opt/openshift/*.done 2> /dev/null" )) || true
     for d in ${dones[@]}; do
         if [[ ! " ${a_dones[@]} " =~ " ${d} " ]]; then
             echo "  --> Phase Completed: $(echo $d | sed 's/.*\/\(.*\)\.done/\1/')"
@@ -50,7 +50,7 @@ while true; do
             a_dones+=( "${d}" )
         fi
     done
-    conts=($(ssh -i sshkey "core@bootstrap.${CLUSTER_NAME}.${BASE_DOM}" "sudo crictl ps -a 2> /dev/null | grep -v '^CONTAINER' | rev | awk '{print \$4 \"_\" \$2 \"_\" \$3}' | rev" )) || true
+    conts=($(ssh -i sshkey "core@$BSIP" "sudo crictl ps -a 2> /dev/null | grep -v '^CONTAINER' | rev | awk '{print \$4 \"_\" \$2 \"_\" \$3}' | rev" )) || true
     for c in ${conts[@]}; do
         if [[ ! " ${a_conts[@]} " =~ " ${c} " ]]; then
             echo "  --> Container: $(echo $c | tr '_' ' ')"
@@ -59,7 +59,7 @@ while true; do
         fi
     done
 
-    btk_stat=$(ssh -i sshkey "core@bootstrap.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active bootkube.service 2> /dev/null" ) || true
+    btk_stat=$(ssh -i sshkey "core@$BSIP" "sudo systemctl is-active bootkube.service 2> /dev/null" ) || true
     test "$btk_stat" = "active" -a "$btk_started" = "0" && btk_started=1 || true
 
     test "$output_flag" = "0" && no_output_counter=$(( $no_output_counter + 1 )) || no_output_counter=0
@@ -87,7 +87,7 @@ else
 fi
 
 echo -n "====> Removing Bootstrap from haproxy: "
-ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" \
+ssh -i sshkey "root@$LBIP" \
     "sed -i '/bootstrap\.${CLUSTER_NAME}\.${BASE_DOM}/d' /etc/haproxy/haproxy.cfg" || err "failed"
-ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" "systemctl restart haproxy" || err "failed"; ok
+ssh -i sshkey "root@$LBIP" "systemctl restart haproxy" || err "failed"; ok
 
