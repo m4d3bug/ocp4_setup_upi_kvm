@@ -69,6 +69,9 @@ controlPlane:
   replicas: ${N_MAST}
 metadata:
   name: ${CLUSTER_NAME}
+spec:
+  httpProxy: http://192.168.33.1:1081
+  httpsProxy: http://192.168.33.1:1081
 networking:
   clusterNetworks:
   - cidr: 10.128.0.0/14
@@ -80,13 +83,6 @@ platform:
   none: {}
 pullSecret: '${PULL_SEC}'
 sshKey: '$(cat ${SSH_PUB_KEY_FILE})'
-imageContentSources:
-- mirrors:
-  - quay.m4d3bug.com/ocp4/openshift4
-  source: quay.io/openshift-release-dev/ocp-release
-- mirrors:
-  - quay.m4d3bug.com/ocp4/openshift4
-  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 
 
