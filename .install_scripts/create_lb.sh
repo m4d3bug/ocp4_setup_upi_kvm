@@ -56,7 +56,7 @@ ssh-keygen -R lb.${CLUSTER_NAME}.${BASE_DOM} &> /dev/null || true
 ssh-keygen -R ${LBIP}  &> /dev/null || true
 while true; do
     sleep 1
-    ssh -i sshkey -o StrictHostKeyChecking=no lb.${CLUSTER_NAME}.${BASE_DOM} true &> /dev/null || continue
+    ssh -i sshkey -o StrictHostKeyChecking=no root@"$LBIP" true &> /dev/null || continue
     break
 done
 #ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" true || err "SSH to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
@@ -66,4 +66,4 @@ echo -n "====> Waiting for SCP result of hosts to LB VM: "
 scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 
 echo -n "====> Waiting for restart dnsmasq on LB VM: "
-ssh -i sshkey "$LBIP" systemctl restart dnsmasq || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+ssh -i sshkey root@"$LBIP" systemctl restart dnsmasq || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
