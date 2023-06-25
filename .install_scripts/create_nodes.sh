@@ -49,7 +49,8 @@ while rvms=$(virsh list --name | grep "${CLUSTER_NAME}-master-\|${CLUSTER_NAME}-
 done
 
 echo -n "====> Marking ${CLUSTER_NAME}.${BASE_DOM} as local in dnsmasq: "
-echo "local=/${CLUSTER_NAME}.${BASE_DOM}/" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "Updating ${DNS_DIR}/${CLUSTER_NAME}.conf failed"; ok
+#echo "local=/${CLUSTER_NAME}.${BASE_DOM}/" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "Updating ${DNS_DIR}/${CLUSTER_NAME}.conf failed"; ok
+ssh -i sshkey "$LBIP" echo "local=/${CLUSTER_NAME}.${BASE_DOM}/" >> /etc/dnsmasq.d/${CLUSTER_NAME}.conf || err "Updating ${DNS_DIR}/${CLUSTER_NAME}.conf failed"; ok
 
 echo -n "====> Starting Bootstrap VM: "
 virsh start ${CLUSTER_NAME}-bootstrap > /dev/null || err "virsh start ${CLUSTER_NAME}-bootstrap failed"; ok
