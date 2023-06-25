@@ -69,9 +69,10 @@ controlPlane:
   replicas: ${N_MAST}
 metadata:
   name: ${CLUSTER_NAME}
-spec:
+proxy:
   httpProxy: http://192.168.33.1:1081
   httpsProxy: http://192.168.33.1:1081
+  noProxy: 172.16.0.0/24,*.${CLUSTER_NAME}.${BASE_DOM}
 networking:
   clusterNetworks:
   - cidr: 10.128.0.0/14
