@@ -34,7 +34,7 @@ while true; do
             fi
         done
     fi
-    images=($(ssh -i sshkey "core@bootstrap.${CLUSTER_NAME}.${BASE_DOM}" "sudo podman images 2> /dev/null | grep -v '^REPOSITORY' | awk '{print \$1 \"-\" \$3}'" )) || true
+    images=($(ssh -i sshkey "core@$BSIP" "sudo podman images 2> /dev/null | grep -v '^REPOSITORY' | awk '{print \$1 \"-\" \$3}'" )) || true
     for i in ${images[@]}; do
         if [[ ! " ${a_images[@]} " =~ " ${i} " ]]; then
             echo "  --> Image Downloaded: ${i}"
