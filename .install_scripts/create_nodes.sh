@@ -140,7 +140,7 @@ scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc/hosts.${CLUSTER_NAME}
 echo -n '====> Adding wild-card (*.apps) dns record in dnsmasq: '
 echo "address=/apps.${CLUSTER_NAME}.${BASE_DOM}/${LBIP}" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; ok
 
-echo -n "====> Resstarting libvirt and dnsmasq: "
+echo -n "====> Restarting libvirt and dnsmasq: "
 systemctl restart libvirtd || err "systemctl restart libvirtd failed"
 systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC"; ok
 
@@ -148,15 +148,15 @@ echo -n "====> Waiting for restart dnsmasq on LB VM: "
 ssh -i sshkey "root@$LBIP" systemctl restart dnsmasq || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 
 echo -n "====> Configuring haproxy in LB VM: "
-ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" "semanage port -a -t http_port_t -p tcp 6443" || \
+ssh -i sshkey "root@$LBIP" "semanage port -a -t http_port_t -p tcp 6443" || \
     err "semanage port -a -t http_port_t -p tcp 6443 failed" && echo -n "."
-ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" "semanage port -a -t http_port_t -p tcp 22623" || \
+ssh -i sshkey "root@$LBIP" "semanage port -a -t http_port_t -p tcp 22623" || \
     err "semanage port -a -t http_port_t -p tcp 22623 failed" && echo -n "."
-ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" "systemctl start haproxy" || \
+ssh -i sshkey "root@$LBIP" "systemctl start haproxy" || \
     err "systemctl start haproxy failed" && echo -n "."
-ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" "systemctl -q enable haproxy" || \
+ssh -i sshkey "root@$LBIP" "systemctl -q enable haproxy" || \
     err "systemctl enable haproxy failed" && echo -n "."
-ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" "systemctl -q is-active haproxy" || \
+ssh -i sshkey "root@$LBIP" "systemctl -q is-active haproxy" || \
     err "haproxy not working as expected" && echo -n "."
 ok
 
