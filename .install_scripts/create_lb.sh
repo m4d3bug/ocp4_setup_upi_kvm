@@ -60,5 +60,5 @@ while true; do
 done
 #ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" true || err "SSH to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 ssh -i sshkey "$LBIP" true || err "SSH to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
-scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc/ || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 ssh -i sshkey "$LBIP" systemctl restart dnsmasq || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
