@@ -48,7 +48,7 @@ echo -n "====> Adding LB hosts entry in /etc/hosts.${CLUSTER_NAME}: "
     "api.${CLUSTER_NAME}.${BASE_DOM}" \
     "api-int.${CLUSTER_NAME}.${BASE_DOM}" >> /etc/hosts.${CLUSTER_NAME}; ok
 
-#systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC failed";
+systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC failed";
 
 echo -n "====> Waiting for SSH access on LB VM: "
 ssh-keygen -R lb.${CLUSTER_NAME}.${BASE_DOM} &> /dev/null || true
@@ -60,5 +60,5 @@ while true; do
 done
 #ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" true || err "SSH to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 ssh -i sshkey "$LBIP" true || err "SSH to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
-scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
-ssh -i sshkey "$LBIP" systemctl restart dnsmasq || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc true || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+ssh -i sshkey "$LBIP" systemctl restart dnsmasq true || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
