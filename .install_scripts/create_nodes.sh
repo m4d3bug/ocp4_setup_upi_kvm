@@ -88,7 +88,7 @@ echo -n "  ==> Adding hosts entry in /etc/hosts.${CLUSTER_NAME}: "
 echo "$BSIP bootstrap.${CLUSTER_NAME}.${BASE_DOM}" >> /etc/hosts.${CLUSTER_NAME} || err "failed"; ok
 
 echo -n "====> Waiting for SCP Bootstrap result of hosts to LB VM: "
-scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc/hosts.${CLUSTER_NAME} || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+scp -i sshkey /etc/hosts.${CLUSTER_NAME} "root@$LBIP":/etc/hosts.${CLUSTER_NAME} || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 
 for i in $(seq 1 ${N_MAST}); do
     echo -n "====> Waiting for Master-$i to obtain IP address: "
@@ -145,7 +145,7 @@ systemctl restart libvirtd || err "systemctl restart libvirtd failed"
 systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC"; ok
 
 echo -n "====> Waiting for restart dnsmasq on LB VM: "
-ssh -i sshkey "$LBIP" systemctl restart dnsmasq || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+ssh -i sshkey "root@$LBIP" systemctl restart dnsmasq || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 
 echo -n "====> Configuring haproxy in LB VM: "
 ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" "semanage port -a -t http_port_t -p tcp 6443" || \
