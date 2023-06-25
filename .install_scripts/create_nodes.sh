@@ -52,8 +52,10 @@ while rvms=$(virsh list --name | grep "${CLUSTER_NAME}-master-\|${CLUSTER_NAME}-
 done
 
 echo -n "====> Marking ${CLUSTER_NAME}.${BASE_DOM} as local in dnsmasq: "
-#echo "local=/${CLUSTER_NAME}.${BASE_DOM}/" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "Updating ${DNS_DIR}/${CLUSTER_NAME}.conf failed"; ok
-ssh -i sshkey "$LBIP" echo "local=/${CLUSTER_NAME}.${BASE_DOM}/" >> /etc/dnsmasq.d/${CLUSTER_NAME}.conf || err "Updating ${DNS_DIR}/${CLUSTER_NAME}.conf failed"; ok
+echo "local=/${CLUSTER_NAME}.${BASE_DOM}/" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "Updating ${DNS_DIR}/${CLUSTER_NAME}.conf failed"; ok
+
+echo -n "====> Waiting for SCP result of hosts to LB VM: "
+scp -i sshkey ${DNS_DIR}/${CLUSTER_NAME}.conf root@"$LBIP":/etc/dnsmasq.d/ || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 
 echo -n "====> Starting Bootstrap VM: "
 virsh start ${CLUSTER_NAME}-bootstrap > /dev/null || err "virsh start ${CLUSTER_NAME}-bootstrap failed"; ok
@@ -85,6 +87,9 @@ virsh net-update ${VIR_NET} add-last ip-dhcp-host --xml "<host mac='$MAC' ip='$B
 echo -n "  ==> Adding hosts entry in /etc/hosts.${CLUSTER_NAME}: "
 echo "$BSIP bootstrap.${CLUSTER_NAME}.${BASE_DOM}" >> /etc/hosts.${CLUSTER_NAME} || err "failed"; ok
 
+echo -n "====> Waiting for SCP Bootstrap result of hosts to LB VM: "
+scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc/hosts.${CLUSTER_NAME} || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+
 for i in $(seq 1 ${N_MAST}); do
     echo -n "====> Waiting for Master-$i to obtain IP address: "
         while true
@@ -108,6 +113,9 @@ for i in $(seq 1 ${N_MAST}); do
         err "failed"; ok
 done
 
+echo -n "====> Waiting for SCP Master result of hosts to LB VM: "
+scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc/hosts.${CLUSTER_NAME} || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+
 for i in $(seq 1 ${N_WORK}); do
     echo -n "====> Waiting for Worker-$i to obtain IP address: "
     while true
@@ -126,6 +134,9 @@ for i in $(seq 1 ${N_WORK}); do
     echo "$IP worker-${i}.${CLUSTER_NAME}.${BASE_DOM}" >> /etc/hosts.${CLUSTER_NAME} || err "failed"; ok
 done
 
+echo -n "====> Waiting for SCP Worker result of hosts to LB VM: "
+scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc/hosts.${CLUSTER_NAME} || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+
 echo -n '====> Adding wild-card (*.apps) dns record in dnsmasq: '
 echo "address=/apps.${CLUSTER_NAME}.${BASE_DOM}/${LBIP}" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; ok
 
@@ -133,6 +144,8 @@ echo -n "====> Resstarting libvirt and dnsmasq: "
 systemctl restart libvirtd || err "systemctl restart libvirtd failed"
 systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC"; ok
 
+echo -n "====> Waiting for restart dnsmasq on LB VM: "
+ssh -i sshkey "$LBIP" systemctl restart dnsmasq || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 
 echo -n "====> Configuring haproxy in LB VM: "
 ssh -i sshkey "lb.${CLUSTER_NAME}.${BASE_DOM}" "semanage port -a -t http_port_t -p tcp 6443" || \
@@ -163,8 +176,8 @@ ssh-keygen -R bootstrap.${CLUSTER_NAME}.${BASE_DOM} &> /dev/null || true
 ssh-keygen -R $BSIP  &> /dev/null || true
 while true; do
     sleep 1
-    ssh -i sshkey -o StrictHostKeyChecking=no core@bootstrap.${CLUSTER_NAME}.${BASE_DOM} true &> /dev/null || continue
+    ssh -i sshkey -o StrictHostKeyChecking=no core@$BSIP true &> /dev/null || continue
     break
 done
-ssh -i sshkey "core@bootstrap.${CLUSTER_NAME}.${BASE_DOM}" true || err "SSH to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+ssh -i sshkey "core@$BSIP" true || err "SSH to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
 
