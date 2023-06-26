@@ -84,7 +84,7 @@ done
 echo -n "====> Waiting for Bootstrap to obtain IP address: "
 while true; do
     sleep 5
-    BSIP=$(virsh domifaddr "${CLUSTER_NAME}-bootstrap" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
+#   BSIP=$(virsh domifaddr "${CLUSTER_NAME}-bootstrap" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
     test "$?" -eq "0" -a -n "$BSIP"  && { echo "$BSIP"; break; }
 done
 MAC=$(virsh domifaddr "${CLUSTER_NAME}-bootstrap" | grep ipv4 | head -n1 | awk '{print $2}')
