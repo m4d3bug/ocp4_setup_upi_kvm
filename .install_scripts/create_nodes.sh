@@ -12,6 +12,14 @@ else
     RHCOS_I_ARG="coreos.inst.image_url"
 fi
 
+HOST=$((1+RANDOM %254))
+OCT=$(echo "$LBIP" | awk -F '.' '{print $1"."$2"."$3}')
+while ping -c 1 $OCT.$((1+RANDOM %254)) &> /dev/null
+do
+    HOST=$((1+RANDOM %254))
+done
+BSIP=$OCT.$HOST
+
 echo -n "====> Creating Boostrap VM: "
 virt-install --name ${CLUSTER_NAME}-bootstrap \
   --disk "${VM_DIR}/${CLUSTER_NAME}-bootstrap.qcow2,size=200" --ram ${BTS_MEM} --cpu host --vcpus ${BTS_CPU} \
@@ -19,7 +27,7 @@ virt-install --name ${CLUSTER_NAME}-bootstrap \
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
   --location rhcos-install/ \
-  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda nameserver=${LBIP} ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/bootstrap.ign" > /dev/null || err "Creating boostrap vm failed"; ok
+  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=${BSIP}::${OCT}.1:255.255.255.0:bootstrap.${CLUSTER_NAME}.${BASE_DOM} nameserver=${LBIP} ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/bootstrap.ign" > /dev/null || err "Creating boostrap vm failed"; ok
 
 for i in $(seq 1 ${N_MAST})
 do
