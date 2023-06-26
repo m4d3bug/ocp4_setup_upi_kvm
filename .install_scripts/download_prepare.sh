@@ -69,10 +69,6 @@ controlPlane:
   replicas: ${N_MAST}
 metadata:
   name: ${CLUSTER_NAME}
-proxy:
-  httpProxy: http://192.168.33.1:1081
-  httpsProxy: http://192.168.33.1:1081
-  noProxy: 172.16.0.0/24,api.${CLUSTER_NAME}.${BASE_DOM},api-int.${CLUSTER_NAME}.${BASE_DOM}
 networking:
   clusterNetworks:
   - cidr: 10.128.0.0/14
@@ -84,6 +80,36 @@ platform:
   none: {}
 pullSecret: '${PULL_SEC}'
 sshKey: '$(cat ${SSH_PUB_KEY_FILE})'
+additionalTrustBundle: | 
+    -----BEGIN CERTIFICATE-----
+    MIIDtzCCAp+gAwIBAgIUYDGV8RumqV5Gqj60uahbxjYI1LUwDQYJKoZIhvcNAQEL
+    BQAwajELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAlZBMREwDwYDVQQHDAhOZXcgWW9y
+    azENMAsGA1UECgwEUXVheTERMA8GA1UECwwIRGl2aXNpb24xGTAXBgNVBAMMEHF1
+    YXkubTRkM2J1Zy5jb20wHhcNMjMwNjIzMTY0NjI3WhcNMjYwNDEyMTY0NjI3WjBq
+    MQswCQYDVQQGEwJVUzELMAkGA1UECAwCVkExETAPBgNVBAcMCE5ldyBZb3JrMQ0w
+    CwYDVQQKDARRdWF5MREwDwYDVQQLDAhEaXZpc2lvbjEZMBcGA1UEAwwQcXVheS5t
+    NGQzYnVnLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAM4R+djs
+    jmKh10BtMrtM/Gz08l+OF1cKE0CCMGikzY+ZsHCgbsM958gnoYnCQ/5xlKgwtDMt
+    6iM6/DeQ+UchBxd0DuppsLS+rzDnuSsKtkqwZZVHGWsxKdjkoYvvHhTGfrENMqeY
+    Ta7aVmQR5dK/LzeHuXvUZy7rOVjqYoFJ5zjh3AfKCf+2RAmxA12mwcaRasK0j/rf
+    nOC4nkEau8aikEJDrLlaqJ+GFa8E2m+lhfiKSk9zRGgcYNYQSZe69VaqijU38nHC
+    cXUFHynxBFh1MHlq3nlAlU+rK275e9Hll3RFbyCyNgTc9KU6tJxwTFyVJR2WTsh4
+    EDIjBrp6AfTiZvkCAwEAAaNVMFMwCwYDVR0PBAQDAgLkMBMGA1UdJQQMMAoGCCsG
+    AQUFBwMBMBsGA1UdEQQUMBKCEHF1YXkubTRkM2J1Zy5jb20wEgYDVR0TAQH/BAgw
+    BgEB/wIBATANBgkqhkiG9w0BAQsFAAOCAQEAGcYQiVW1TawiEcKp6uNnup4SXUF/
+    +EVB0MDDXEVDXUrxhI4facTH33n4nGZpp0jZ+zxv0j6rxtYrU3IH7SNnjUHHazqZ
+    nq/2abVFQ6BfFXRwNPMMb+gGJ7FhXar2U43XWs5yhBEtboKWigq6/cvdo745mOWU
+    iaFnth0P6Q6hjHcwniT15mxMAjYst3gosWlZQuHDF0yGavVWnb8miwzKxnCuDyFc
+    Mf1M6ul637m2kG3bzSCXGbmS3F1QDTeq1jOIp0dfnXwX51Czqp0KxIWJEn/OS8ax
+    BT4drq7aHe1DqDoHsdqwdIT3hzFFmCLXwsI6tLcly5yxeR17tXX0Y7JsLA==
+    -----END CERTIFICATE-----
+imageContentSources:
+- mirrors:
+  - quay.m4d3bug.com/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - quay.m4d3bug.com/ocp4/openshift4
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 
 
