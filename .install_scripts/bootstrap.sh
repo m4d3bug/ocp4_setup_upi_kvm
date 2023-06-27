@@ -78,6 +78,12 @@ done
 
 ./openshift-install --dir=install_dir wait-for bootstrap-complete
 
+    for csr in $(./oc get csr 2> /dev/null | grep -w 'Pending' | awk '{print $1}'); do
+        echo -n '  --> Approving CSR: ';
+        ./oc adm certificate approve "$csr" 2> /dev/null || true
+        output_delay=0
+    done
+
 echo -n "====> Removing Boostrap VM: "
 if [ "${KEEP_BS}" == "no" ]; then
     virsh destroy ${CLUSTER_NAME}-bootstrap > /dev/null || err "virsh destroy ${CLUSTER_NAME}-bootstrap failed"
