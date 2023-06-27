@@ -149,6 +149,9 @@ scp -i sshkey /etc/hosts.${CLUSTER_NAME} root@"$LBIP":/etc/hosts.${CLUSTER_NAME}
 echo -n '====> Adding wild-card (*.apps) dns record in dnsmasq: '
 echo "address=/apps.${CLUSTER_NAME}.${BASE_DOM}/${LBIP}" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; ok
 
+echo -n "====> Waiting for SCP result of hosts to LB VM: "
+scp -i sshkey ${DNS_DIR}/${CLUSTER_NAME}.conf root@"$LBIP":/etc/dnsmasq.d/ || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
+
 echo -n "====> Restarting libvirt and dnsmasq: "
 systemctl restart libvirtd || err "systemctl restart libvirtd failed"
 systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC"; ok
