@@ -45,14 +45,13 @@ done
 for i in $(seq 1 ${N_WORK})
 do
 echo -n "====> Creating Worker-${i} VM: "
-  virt-install --print-xml --name ${CLUSTER_NAME}-worker-${i} \
+  virt-install --name ${CLUSTER_NAME}-worker-${i} \
   --disk "${VM_DIR}/${CLUSTER_NAME}-worker-${i}.qcow2,size=200" --ram ${WOR_MEM} --cpu host --vcpus ${WOR_CPU} \
   --graphics vnc,listen=0.0.0.0 \
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
   --location rhcos-install/ \
-  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda nameserver=${LBIP} ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/worker.ign" > /var/lib/libvirt/images/${CLUSTER_NAME}-worker-${i}.xml || err "Creating worker-${i} vm failed "; ok
-  virsh define /var/lib/libvirt/images/${CLUSTER_NAME}-worker-${i}.xml 
+  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda nameserver=${LBIP} ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/worker.ign" > /dev/null || err "Creating worker-${i} vm failed "; ok
 done
 
 echo "====> Waiting for RHCOS Installation to finish: "
