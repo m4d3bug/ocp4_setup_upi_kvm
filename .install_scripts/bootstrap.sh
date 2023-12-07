@@ -81,7 +81,7 @@ done
 while ! ./openshift-install --dir=install_dir wait-for bootstrap-complete; do
     for i in $(seq 1 ${N_WORK}); do
        echo -n "====> Booting Worker-${i} VM: ";
-       virsh define ${CLUSTER_NAME}-worker-${i}.xml > /dev/null || err "Booting worker-${i} vm failed "; ok
+       virsh start ${CLUSTER_NAME}-worker-${i} > /dev/null || err "Booting worker-${i} vm failed "; ok
     done
 done
 
