@@ -79,13 +79,19 @@ done
 ./openshift-install --dir=install_dir wait-for bootstrap-complete
 
 while ! ./openshift-install --dir=install_dir wait-for bootstrap-complete; do
+    for i in $(seq 1 ${N_WORK}); do
+       echo -n "====> Booting Worker-${i} VM: ";
+       virsh start --name ${CLUSTER_NAME}-worker-${i} > /dev/null || err "Booting worker-${i} vm failed "; ok
+    done
+done
+
+while ! ./openshift-install --dir=install_dir wait-for bootstrap-complete; do
     for csr in $(./oc get csr 2> /dev/null | grep -w 'Pending' | awk '{print $1}'); do
         echo -n '  --> Approving CSR: ';
         ./oc adm certificate approve "$csr" 2> /dev/null || true
         output_delay=0
     done
 done
-
 
 echo -n "====> Removing Boostrap VM: "
 if [ "${KEEP_BS}" == "no" ]; then
