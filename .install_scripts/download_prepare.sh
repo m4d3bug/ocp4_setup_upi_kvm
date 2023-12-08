@@ -84,9 +84,9 @@ sshKey: '$(cat ${SSH_PUB_KEY_FILE})'
 - mirrors:
   - quay.mirrors.ustc.edu.cn/openshift-release-dev/ocp-release
   source: quay.io/openshift-release-dev/ocp-release
-- mirrors:
-  -quay.mirrors.ustc.edu.cn/openshift-release-dev/ocp-v4.0-art-dev
-  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+#- mirrors:
+#  -quay.mirrors.ustc.edu.cn/openshift-release-dev/ocp-v4.0-art-dev
+#  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 
 
