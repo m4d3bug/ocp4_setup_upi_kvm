@@ -80,7 +80,7 @@ platform:
   none: {}
 pullSecret: '${PULL_SEC}'
 sshKey: '$(cat ${SSH_PUB_KEY_FILE})'
-#imageContentSources:
+imageContentSources:
 - mirrors:
   - quay.mirrors.ustc.edu.cn/openshift-release-dev/ocp-release
   source: quay.io/openshift-release-dev/ocp-release
