@@ -81,12 +81,12 @@ platform:
 pullSecret: '${PULL_SEC}'
 sshKey: '$(cat ${SSH_PUB_KEY_FILE})'
 #imageContentSources:
-#- mirrors:
-#  - quay.m4d3bug.com/ocp4/openshift4
-#  source: quay.io/openshift-release-dev/ocp-release
-#- mirrors:
-#  - quay.m4d3bug.com/ocp4/openshift4
-#  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+- mirrors:
+  - quay.mirrors.ustc.edu.cn/openshift-release-dev/ocp-release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  -quay.mirrors.ustc.edu.cn/openshift-release-dev/ocp-v4.0-art-dev
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 
 
