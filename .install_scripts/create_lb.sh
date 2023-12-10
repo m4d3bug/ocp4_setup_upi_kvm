@@ -20,6 +20,7 @@ virt-customize -a "${VM_DIR}/${CLUSTER_NAME}-lb.qcow2" \
     --copy-in install_dir/bootstrap.ign:/opt/ --copy-in install_dir/master.ign:/opt/ --copy-in install_dir/worker.ign:/opt/ \
     --copy-in "${CACHE_DIR}/${IMAGE}":/opt/ --copy-in tmpws.service:/etc/systemd/system/ \
     --copy-in haproxy.cfg:/etc/haproxy/ \
+    --root-password password:redhat \
     --run-command "systemctl daemon-reload" --run-command "systemctl enable tmpws.service" --run-command "systemctl enable dnsmasq.service" || \
     err "Setting up Loadbalancer VM image ${VM_DIR}/${CLUSTER_NAME}-lb.qcow2 failed"
 
