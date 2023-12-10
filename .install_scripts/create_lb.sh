@@ -67,6 +67,4 @@ ssh -i sshkey "root@$LBIP" true || err "SSH to lb.${CLUSTER_NAME}.${BASE_DOM} fa
 echo -n "====> Waiting for SCP result of hosts to LB VM: "
 scp -i sshkey /etc/hosts.${CLUSTER_NAME} "root@$LBIP":/etc  &> /dev/null || err "SCP to lb.${CLUSTER_NAME}.${BASE_DOM} failed"
 ssh -i sshkey "root@$LBIP" \
-    "cat /etc/hosts.${CLUSTER_NAME} >> /etc/hosts" || err "Adding hosts on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
-ssh -i sshkey "root@$LBIP" \
     "systemctl restart dnsmasq" || err "Restart Dnsmasq on lb.${CLUSTER_NAME}.${BASE_DOM} failed"; ok
