@@ -76,9 +76,9 @@ while true; do
     
 done
 
-./openshift-install --dir=install_dir wait-for bootstrap-complete
+./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug
 
-while ! ./openshift-install --dir=install_dir wait-for bootstrap-complete; do
+while ! ./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug; do
     for csr in $(./oc get csr 2> /dev/null | grep -w 'Pending' | awk '{print $1}'); do
         echo -n '  --> Approving CSR: ';
         ./oc adm certificate approve "$csr" 2> /dev/null || true
