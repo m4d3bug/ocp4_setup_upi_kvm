@@ -76,14 +76,23 @@ while true; do
     
 done
 
-./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug
+./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug &
 
-while ! ./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug; do
-    for csr in $(./oc get csr 2> /dev/null | grep -w 'Pending' | awk '{print $1}'); do
-        echo -n '  --> Approving CSR: ';
-        ./oc adm certificate approve "$csr" 2> /dev/null || true
-        output_delay=0
-    done
+# 获取安装进程的 PID，以便稍后检查其状态
+INSTALL_PID=$!
+
+# 循环，直到安装进程完成
+while kill -0 $INSTALL_PID 2> /dev/null; do
+  # 获取 'oc get csr' 的输出，并找出所有 'pending' 状态的 csr
+  PENDING_CSRS=$(./oc get csr | grep 'Pending' | awk '{print \$1}')
+
+  # 对于每个 'pending' 状态的 csr，使用 'oc adm certificate approve' 命令审批
+  for CSR in $PENDING_CSRS; do
+    ./oc adm certificate approve $CSR
+  done
+
+  # 等待一段时间，然后再次检查
+  sleep 10
 done
 
 echo -n "====> Removing Boostrap VM: "
