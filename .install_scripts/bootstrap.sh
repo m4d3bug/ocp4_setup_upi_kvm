@@ -78,21 +78,23 @@ done
 
 ./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug &
 
-# 获取安装进程的 PID，以便稍后检查其状态
+# Get the PID of the installation
 INSTALL_PID=$!
 
-# 循环，直到安装进程完成
+# rolling until the install finished
 while kill -0 $INSTALL_PID 2> /dev/null; do
-  # 获取 'oc get csr' 的输出，并找出所有 'pending' 状态的 csr
+  # Get the output of 'oc get csr', and fin the 'pending' csr
   PENDING_CSRS=$(./oc get csr | grep 'Pending' | awk '{print \$1}')
 
-  # 对于每个 'pending' 状态的 csr，使用 'oc adm certificate approve' 命令审批
+  # Approve each 'pending' csr
   for CSR in $PENDING_CSRS; do
-    ./oc adm certificate approve $CSR
+    ./oc adm certificate approve $CSR && \
+        { echo "  --> Approved $CSR"; }
   done
 
   # 等待一段时间，然后再次检查
-  sleep 10
+  sleep 90
+  ssh -i sshkey "core@$BSIP" "sudo systemctl restart kubelet.service 2> /dev/null"
 done
 
 echo -n "====> Removing Boostrap VM: "
