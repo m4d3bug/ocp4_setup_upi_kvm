@@ -76,26 +76,7 @@ while true; do
     
 done
 
-./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug &
-
-# Get the PID of the installation
-INSTALL_PID=$!
-
-# rolling until the install finished
-while kill -0 $INSTALL_PID 2> /dev/null; do
-  # Get the output of 'oc get csr', and fin the 'pending' csr
-  PENDING_CSRS=$(./oc get csr | grep 'Pending' | awk '{print \$1}')
-
-  # Approve each 'pending' csr
-  for CSR in $PENDING_CSRS; do
-    ./oc adm certificate approve $CSR && \
-        { echo "  --> Approved $CSR"; }
-  done
-
-  # 等待一段时间，然后再次检查
-  sleep 90
-  ssh -i sshkey "core@$BSIP" "sudo systemctl restart kubelet.service 2> /dev/null"
-done
+./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug 
 
 echo -n "====> Removing Boostrap VM: "
 if [ "${KEEP_BS}" == "no" ]; then
