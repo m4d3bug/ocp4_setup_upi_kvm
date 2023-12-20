@@ -15,20 +15,22 @@ fi
 echo -n "====> Creating Boostrap VM: "
 virt-install --name ${CLUSTER_NAME}-bootstrap \
   --disk "${VM_DIR}/${CLUSTER_NAME}-bootstrap.qcow2,size=50" --ram ${BTS_MEM} --cpu host --vcpus ${BTS_CPU} \
+  --graphics vnc,listen=0.0.0.0 \
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
   --location rhcos-install/ \
-  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/bootstrap.ign" > /dev/null || err "Creating boostrap vm failed"; ok
+  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::bootstrap.${CLUSTER_NAME}.${BASE_DOM}:: ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/bootstrap.ign" > /dev/null || err "Creating boostrap vm failed"; ok
 
 for i in $(seq 1 ${N_MAST})
 do
 echo -n "====> Creating Master-${i} VM: "
-virt-install --name ${CLUSTER_NAME}-master-${i} \
---disk "${VM_DIR}/${CLUSTER_NAME}-master-${i}.qcow2,size=50" --ram ${MAS_MEM} --cpu host --vcpus ${MAS_CPU} \
---os-type linux --os-variant rhel7.0 \
---network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
---location rhcos-install/ \
---extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/master.ign" > /dev/null || err "Creating master-${i} vm failed "; ok
+  virt-install --name ${CLUSTER_NAME}-master-${i} \
+  --disk "${VM_DIR}/${CLUSTER_NAME}-master-${i}.qcow2,size=50" --ram ${MAS_MEM} --cpu host --vcpus ${MAS_CPU} \
+  --graphics vnc,listen=0.0.0.0 \
+  --os-type linux --os-variant rhel7.0 \
+  --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
+  --location rhcos-install/ \
+  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::master-${i}.${CLUSTER_NAME}.${BASE_DOM}:: ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/master.ign" > /dev/null || err "Creating master-${i} vm failed "; ok
 done
 
 for i in $(seq 1 ${N_WORK})
@@ -36,10 +38,11 @@ do
 echo -n "====> Creating Worker-${i} VM: "
   virt-install --name ${CLUSTER_NAME}-worker-${i} \
   --disk "${VM_DIR}/${CLUSTER_NAME}-worker-${i}.qcow2,size=50" --ram ${WOR_MEM} --cpu host --vcpus ${WOR_CPU} \
+  --graphics vnc,listen=0.0.0.0 \
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
   --location rhcos-install/ \
-  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/worker.ign" > /dev/null || err "Creating worker-${i} vm failed "; ok
+  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::worker-${i}.${CLUSTER_NAME}.${BASE_DOM}:: ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/worker.ign" > /dev/null || err "Creating worker-${i} vm failed "; ok
 done
 
 echo "====> Waiting for RHCOS Installation to finish: "
@@ -79,7 +82,10 @@ virsh net-update ${VIR_NET} add-last ip-dhcp-host --xml "<host mac='$MAC' ip='$B
     err "Adding DHCP reservation failed"; ok
 
 echo -n "  ==> Adding hosts entry in /etc/hosts.${CLUSTER_NAME}: "
-echo "$BSIP bootstrap.${CLUSTER_NAME}.${BASE_DOM}" >> /etc/hosts.${CLUSTER_NAME} || err "failed"; ok
+echo "$BSIP bootstrap.${CLUSTER_NAME}.${BASE_DOM}" >> /etc/hosts.${CLUSTER_NAME} || err "failed"; 
+echo "127.0.0.1 quay.io" >> /etc/hosts.${CLUSTER_NAME} || err "failed";
+echo "::1 quay.io" >> /etc/hosts.${CLUSTER_NAME} || err "failed";
+echo "43.134.201.169 quay.madebug.net" >> /etc/hosts.${CLUSTER_NAME} || err "failed"; ok
 
 for i in $(seq 1 ${N_MAST}); do
     echo -n "====> Waiting for Master-$i to obtain IP address: "
