@@ -76,7 +76,7 @@ while true; do
     
 done
 
-./openshift-install --dir=install_dir wait-for bootstrap-complete
+./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level debug 
 
 echo -n "====> Removing Boostrap VM: "
 if [ "${KEEP_BS}" == "no" ]; then
