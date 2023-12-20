@@ -14,7 +14,7 @@ fi
 
 echo -n "====> Creating Boostrap VM: "
 virt-install --name ${CLUSTER_NAME}-bootstrap \
-  --disk "${VM_DIR}/${CLUSTER_NAME}-bootstrap.qcow2,size=50" --ram ${BTS_MEM} --cpu host --vcpus ${BTS_CPU} \
+  --disk "${VM_DIR}/${CLUSTER_NAME}-bootstrap.qcow2,size=120" --ram ${BTS_MEM} --cpu host --vcpus ${BTS_CPU} \
   --graphics vnc,listen=0.0.0.0 \
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
@@ -25,7 +25,7 @@ for i in $(seq 1 ${N_MAST})
 do
 echo -n "====> Creating Master-${i} VM: "
   virt-install --name ${CLUSTER_NAME}-master-${i} \
-  --disk "${VM_DIR}/${CLUSTER_NAME}-master-${i}.qcow2,size=50" --ram ${MAS_MEM} --cpu host --vcpus ${MAS_CPU} \
+  --disk "${VM_DIR}/${CLUSTER_NAME}-master-${i}.qcow2,size=120" --ram ${MAS_MEM} --cpu host --vcpus ${MAS_CPU} \
   --graphics vnc,listen=0.0.0.0 \
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
@@ -37,7 +37,7 @@ for i in $(seq 1 ${N_WORK})
 do
 echo -n "====> Creating Worker-${i} VM: "
   virt-install --name ${CLUSTER_NAME}-worker-${i} \
-  --disk "${VM_DIR}/${CLUSTER_NAME}-worker-${i}.qcow2,size=50" --ram ${WOR_MEM} --cpu host --vcpus ${WOR_CPU} \
+  --disk "${VM_DIR}/${CLUSTER_NAME}-worker-${i}.qcow2,size=120" --ram ${WOR_MEM} --cpu host --vcpus ${WOR_CPU} \
   --graphics vnc,listen=0.0.0.0 \
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
@@ -83,9 +83,6 @@ virsh net-update ${VIR_NET} add-last ip-dhcp-host --xml "<host mac='$MAC' ip='$B
 
 echo -n "  ==> Adding hosts entry in /etc/hosts.${CLUSTER_NAME}: "
 echo "$BSIP bootstrap.${CLUSTER_NAME}.${BASE_DOM}" >> /etc/hosts.${CLUSTER_NAME} || err "failed"; 
-echo "127.0.0.1 quay.io" >> /etc/hosts.${CLUSTER_NAME} || err "failed";
-echo "::1 quay.io" >> /etc/hosts.${CLUSTER_NAME} || err "failed";
-echo "43.134.201.169 quay.madebug.net" >> /etc/hosts.${CLUSTER_NAME} || err "failed"; ok
 
 for i in $(seq 1 ${N_MAST}); do
     echo -n "====> Waiting for Master-$i to obtain IP address: "
@@ -129,6 +126,9 @@ for i in $(seq 1 ${N_WORK}); do
 done
 
 echo -n '====> Adding wild-card (*.apps) dns record in dnsmasq: '
+echo "address=/quay.madebug.net/43.134.201.169" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; 
+echo "address=/quay.io/127.0.0.1" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; 
+echo "address=/quay.io/::1" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; 
 echo "address=/apps.${CLUSTER_NAME}.${BASE_DOM}/${LBIP}" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; ok
 
 echo -n "====> Resstarting libvirt and dnsmasq: "
