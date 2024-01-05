@@ -20,6 +20,16 @@ s_api="Down"
 btk_started=0
 no_output_counter=0
 while true; do
+
+    for node in $(virsh list --all | grep "${CLUSTER_NAME}"  | awk '{print $2}'); do 
+      if ! virsh domifaddr $node | grep -v "${OCT}"; then
+        echo -n "====> Interface of ${node}, Rebooting: "
+        virsh reset $node &> /dev/null || \
+            err "failed"
+        ok "successed"
+      fi
+    done
+
     output_flag=0
     if [ "${s_api}" == "Down" ]; then
         ./oc get --raw / &> /dev/null && \
@@ -59,6 +69,27 @@ while true; do
         fi
     done
 
+    for i in $(seq 1 ${N_MAST}); do
+      mco_stat=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@master-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active machine-config-daemon-firstboot.service" 2> /dev/null) || true
+      # 如果服务已停止，后台启动它
+      if [ "${mco_stat}" = "failed" ]; then
+        echo -n "  --> Restarting machine-config-daemon-firstboot.service on Master-${i}..."
+        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@master-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl start machine-config-daemon-firstboot.service " 2> /dev/null
+      fi
+    done
+
+
+    if [ "${N_WORK}" != "0" ]; then
+      for i in $(seq 1 ${N_WORK}); do
+        mco_stat=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@worker-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active machine-config-daemon-firstboot.service" 2> /dev/null) || true
+        # 如果服务已停止，后台启动它
+        if [ "${mco_stat}" = "failed" ]; then
+          echo -n "  --> Restarting machine-config-daemon-firstboot.service on Worker-${i}..."
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@worker-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl start machine-config-daemon-firstboot.service " 2> /dev/null
+        fi
+      done
+    fi
+
     btk_stat=$(ssh -i sshkey "core@bootstrap.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active bootkube.service 2> /dev/null" ) || true
     test "$btk_stat" = "active" -a "$btk_started" = "0" && btk_started=1 || true
 
@@ -76,7 +107,7 @@ while true; do
     
 done
 
-./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level debug 
+./openshift-install --dir=install_dir wait-for bootstrap-complete --log-level=debug | tee bootstrap.log &
 
 echo -n "====> Removing Boostrap VM: "
 if [ "${KEEP_BS}" == "no" ]; then

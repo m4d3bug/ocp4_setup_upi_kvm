@@ -80,10 +80,6 @@ platform:
   none: {}
 pullSecret: '${PULL_SEC}'
 sshKey: '$(cat ${SSH_PUB_KEY_FILE})'
-proxy:
-  httpProxy: http://192.168.33.1:1081
-  httpsProxy: http://192.168.33.1:1081
-  noProxy: .${CLUSTER_NAME}.${BASE_DOM},quay.madebug.net,172.30.0.0/16,10.128.0.0/14
 imageContentSources:
 - mirrors:
   - quay.madebug.net/ocp4/openshift4

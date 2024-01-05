@@ -19,7 +19,7 @@ virt-install --name ${CLUSTER_NAME}-bootstrap \
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
   --location rhcos-install/ \
-  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::bootstrap.${CLUSTER_NAME}.${BASE_DOM}:: ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/bootstrap.ign" > /dev/null || err "Creating boostrap vm failed"; ok
+  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::bootstrap.${CLUSTER_NAME}.${BASE_DOM}:: nameserver=${LIBVIRT_GWIP} ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/bootstrap.ign" > /dev/null || err "Creating boostrap vm failed"; ok
 
 for i in $(seq 1 ${N_MAST})
 do
@@ -30,8 +30,43 @@ echo -n "====> Creating Master-${i} VM: "
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
   --location rhcos-install/ \
-  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::master-${i}.${CLUSTER_NAME}.${BASE_DOM}:: ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/master.ign" > /dev/null || err "Creating master-${i} vm failed "; ok
+  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::master-${i}.${CLUSTER_NAME}.${BASE_DOM}:: nameserver=${LIBVIRT_GWIP} ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/master.ign" > /dev/null || err "Creating master-${i} vm failed "; ok
 done
+
+#for i in $(seq 1 ${N_WORK})
+#do
+#  echo -n "====> Creating Worker-${i} VM: "
+  
+  # 使用awk命令和'.'作为分隔符，获取LBIP的前三个字段（即子网部分），赋值给OCT
+#  OCT=$(echo "$LBIP" | awk -F '.' '{print $1"."$2"."$3}')
+
+  # 初始化HOST为一个随机值
+#  HOST=$((1+RANDOM %254))
+
+  # 进入一个无限循环，直到找到一个未被使用的IP地址
+#  while true
+#  do
+      # 尝试ping这个IP地址，如果ping失败（即IP地址未被使用），则跳出循环
+#      if ! ping -c 1 $OCT.$HOST &> /dev/null
+#      then
+#          break
+#      fi
+      # 如果ping成功（即IP地址已被使用），则生成一个新的随机数，赋值给HOST
+#      HOST=$((1+RANDOM %254))
+#  done
+
+  # 当退出循环时，表明已找到一个未被使用的IP地址，将其赋值给WKIP
+#  WKIP=$OCT.$HOST
+#  echo ${WKIP}
+
+#  virt-install --name ${CLUSTER_NAME}-worker-${i} \
+#  --disk "${VM_DIR}/${CLUSTER_NAME}-worker-${i}.qcow2,size=120" --ram ${WOR_MEM} --cpu host --vcpus ${WOR_CPU} \
+#  --graphics vnc,listen=0.0.0.0 \
+#  --os-type linux --os-variant rhel7.0 \
+#  --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
+#  --location rhcos-install/ \
+#  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=${WKIP}::${LIBVIRT_GWIP}:255.255.255.0:worker-${i}.${CLUSTER_NAME}.${BASE_DOM}:: nameserver=${LIBVIRT_GWIP} ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/worker.ign" > /dev/null || err "Creating worker-${i} vm failed "; ok
+#done
 
 for i in $(seq 1 ${N_WORK})
 do
@@ -42,7 +77,7 @@ echo -n "====> Creating Worker-${i} VM: "
   --os-type linux --os-variant rhel7.0 \
   --network network=${VIR_NET},model=virtio --noreboot --noautoconsole \
   --location rhcos-install/ \
-  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::worker-${i}.${CLUSTER_NAME}.${BASE_DOM}:: ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/worker.ign" > /dev/null || err "Creating worker-${i} vm failed "; ok
+  --extra-args "nomodeset rd.neednet=1 coreos.inst=yes coreos.inst.install_dev=vda ip=::::worker-${i}.${CLUSTER_NAME}.${BASE_DOM}:: nameserver=${LIBVIRT_GWIP} ${RHCOS_I_ARG}=http://${LBIP}:${WS_PORT}/${IMAGE} coreos.inst.ignition_url=http://${LBIP}:${WS_PORT}/worker.ign" > /dev/null || err "Creating worker-${i} vm failed "; ok
 done
 
 echo "====> Waiting for RHCOS Installation to finish: "
@@ -109,13 +144,13 @@ done
 
 for i in $(seq 1 ${N_WORK}); do
     echo -n "====> Waiting for Worker-$i to obtain IP address: "
-    while true
-    do
-        sleep 5
-        IP=$(virsh domifaddr "${CLUSTER_NAME}-worker-${i}" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
-        test "$?" -eq "0" -a -n "$IP"  && { echo "$IP"; break; }
-    done
-    MAC=$(virsh domifaddr "${CLUSTER_NAME}-worker-${i}" | grep ipv4 | head -n1 | awk '{print $2}')
+        while true
+        do
+            sleep 5
+            IP=$(virsh domifaddr "${CLUSTER_NAME}-worker-${i}" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
+            test "$?" -eq "0" -a -n "$IP"  && { echo "$IP"; break; }
+        done
+        MAC=$(virsh domifaddr "${CLUSTER_NAME}-worker-${i}" | grep ipv4 | head -n1 | awk '{print $2}')
 
     echo -n "  ==> Adding DHCP reservation: "
     virsh net-update ${VIR_NET} add-last ip-dhcp-host --xml "<host mac='$MAC' ip='$IP'/>" --live --config > /dev/null || \

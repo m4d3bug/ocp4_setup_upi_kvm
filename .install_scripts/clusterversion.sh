@@ -86,5 +86,5 @@ echo "######################################################"
 echo "          time taken = $TIME_TAKEN minutes"
 echo 
 
-./openshift-install --dir=install_dir wait-for install-complete
+./openshift-install --dir=install_dir wait-for install-complete --log-level=debug | tee install.log & 
 
