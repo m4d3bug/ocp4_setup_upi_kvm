@@ -20,16 +20,6 @@ s_api="Down"
 btk_started=0
 no_output_counter=0
 while true; do
-
-    for node in $(virsh list --all | grep "${CLUSTER_NAME}"  | awk '{print $2}'); do 
-      if ! virsh domifaddr $node | grep -v "${OCT}"; then
-        echo -n "====> Interface of ${node}, Rebooting: "
-        virsh reset $node &> /dev/null || \
-            err "failed"
-        ok "successed"
-      fi
-    done
-
     output_flag=0
     if [ "${s_api}" == "Down" ]; then
         ./oc get --raw / &> /dev/null && \
@@ -44,6 +34,12 @@ while true; do
             fi
         done
     fi
+
+    BSIP=$(virsh domifaddr "${CLUSTER_NAME}-bootstrap" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
+    if [ -z "$BSIP" ]; then
+        virsh reset "${CLUSTER_NAME}-bootstrap" > /dev/null 2>&1 && { echo "====> Rebooted Bootstrap"; }
+    fi
+
     images=($(ssh -i sshkey "core@bootstrap.${CLUSTER_NAME}.${BASE_DOM}" "sudo podman images 2> /dev/null | grep -v '^REPOSITORY' | awk '{print \$1 \"-\" \$3}'" )) || true
     for i in ${images[@]}; do
         if [[ ! " ${a_images[@]} " =~ " ${i} " ]]; then
@@ -70,6 +66,10 @@ while true; do
     done
 
     for i in $(seq 1 ${N_MAST}); do
+      IP=$(virsh domifaddr "${CLUSTER_NAME}-master-${i}" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
+      if [ -z "$IP" ]; then
+        virsh reset "${CLUSTER_NAME}-master-${i}" > /dev/null 2>&1 && { echo "====> Rebooted Master-$i"; }
+      fi
       mco_stat=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@master-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active machine-config-daemon-firstboot.service" 2> /dev/null) || true
       # 如果服务已停止，后台启动它
       if [ "${mco_stat}" = "failed" ]; then
@@ -81,6 +81,10 @@ while true; do
 
     if [ "${N_WORK}" != "0" ]; then
       for i in $(seq 1 ${N_WORK}); do
+        IP=$(virsh domifaddr "${CLUSTER_NAME}-worker-${i}" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
+        if [ -z "$IP" ]; then
+            virsh reset "${CLUSTER_NAME}-worker-${i}" > /dev/null 2>&1 && { echo " ====> Rebooted Worker-$i"; }
+        fi
         mco_stat=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@worker-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active machine-config-daemon-firstboot.service" 2> /dev/null) || true
         # 如果服务已停止，后台启动它
         if [ "${mco_stat}" = "failed" ]; then
@@ -104,6 +108,13 @@ while true; do
     test "$btk_stat" = "inactive" -a "$s_api" = "Up" && break
 
     sleep 15
+
+    # sometimes the master will unable to ready due too late to finish the deployment, we have to approve its.
+    for csr in $(./oc get csr 2> /dev/null | grep -w 'Pending' | awk '{print $1}'); do
+        echo -n '  --> Approving CSR: ';
+        ./oc adm certificate approve "$csr" 2> /dev/null || true
+        output_delay=0
+    done
     
 done
 
