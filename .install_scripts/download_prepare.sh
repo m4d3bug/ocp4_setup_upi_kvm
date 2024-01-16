@@ -89,6 +89,16 @@ imageContentSources:
   source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 
+echo "====> Creating manifests: "
+./openshift-install create manifests --dir=./install_dir || \
+    err "./openshift-install create manifests --dir=./install_dir failed"
+
+echo ${MAS_SCHEDULE}
+if [ "${MAS_UNSCHEDULE}" == "yes" ]; then
+    echo "====> Disabling Master schedulable: "
+    sed -i 's/mastersSchedulable: true/mastersSchedulable: false/g' ./install_dir/manifests/cluster-scheduler-02-config.yml || \
+        err "Modifying cluster-scheduler-02-config.yml failed"
+fi
 
 echo "====> Creating ignition configs: "
 ./openshift-install create ignition-configs --dir=./install_dir || \

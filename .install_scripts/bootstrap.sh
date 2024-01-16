@@ -73,26 +73,10 @@ while true; do
       mco_stat=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@master-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active machine-config-daemon-firstboot.service" 2> /dev/null) || true
       # 如果服务已停止，后台启动它
       if [ "${mco_stat}" = "failed" ]; then
-        echo -n "  --> Restarting machine-config-daemon-firstboot.service on Master-${i}..."
-        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@master-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl start machine-config-daemon-firstboot.service " 2> /dev/null
+        echo "  --> Restarting machine-config-daemon-firstboot.service on Master-${i}..."
+	ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@master-${i}.${CLUSTER_NAME}.${BASE_DOM}" "nohup sudo systemctl restart machine-config-daemon-firstboot.service > /dev/null 2>&1 &" 2> /dev/null
       fi
     done
-
-
-    if [ "${N_WORK}" != "0" ]; then
-      for i in $(seq 1 ${N_WORK}); do
-        IP=$(virsh domifaddr "${CLUSTER_NAME}-worker-${i}" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
-        if [ -z "$IP" ]; then
-            virsh reset "${CLUSTER_NAME}-worker-${i}" > /dev/null 2>&1 && { echo " ====> Rebooted Worker-$i"; }
-        fi
-        mco_stat=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@worker-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active machine-config-daemon-firstboot.service" 2> /dev/null) || true
-        # 如果服务已停止，后台启动它
-        if [ "${mco_stat}" = "failed" ]; then
-          echo -n "  --> Restarting machine-config-daemon-firstboot.service on Worker-${i}..."
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@worker-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl start machine-config-daemon-firstboot.service " 2> /dev/null
-        fi
-      done
-    fi
 
     btk_stat=$(ssh -i sshkey "core@bootstrap.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active bootkube.service 2> /dev/null" ) || true
     test "$btk_stat" = "active" -a "$btk_started" = "0" && btk_started=1 || true

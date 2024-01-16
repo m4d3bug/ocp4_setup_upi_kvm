@@ -142,6 +142,15 @@ case $key in
     export AUTOSTART_VMS="no"
     shift
     ;;
+    --master-unschedule)
+    # Check if -w value is greater than 2
+    if [ "$N_WORK" -lt 2 ]; then
+        err "Invalid value for -w when --master-unschedule is enabled. It must be greater than 2."
+    else
+       export MAS_UNSCHEDULE="yes"
+    fi
+    shift
+    ;;
     --destroy)
     export DESTROY="yes"
     shift

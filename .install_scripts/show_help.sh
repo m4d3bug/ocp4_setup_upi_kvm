@@ -125,6 +125,11 @@ Options:
     Flag to set the cluster VMs to auto-start on reboot.
     Default: $(test "${AUTOSTART_VMS}" = "yes" && echo "<set>" || echo "<not set>")
 
+--master-unschedule
+    Flag to set the master nodes unschedulable. 
+    You have to ensure your worker number is more than 2.
+    Default: $(test "${MAS_UNSCHEDULE}" = "yes" && echo "<set>" || echo "<not set>")
+
 -y, --yes
     Flag to assume yes/continue to all questions/checks.
     Set this for the script to be non-interactive and continue with out asking for confirmation

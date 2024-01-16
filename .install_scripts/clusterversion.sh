@@ -18,6 +18,21 @@ do
     cv_avail=$(./oc get clusterversion -o jsonpath='{.items[*].status.conditions[?(.type=="Available")].status}' 2> /dev/null) || continue
     nodes_ready=$(./oc get nodes | grep 'Ready' | wc -l)
 
+    if [ "${N_WORK}" != "0" ]; then
+      for i in $(seq 1 ${N_WORK}); do
+        IP=$(virsh domifaddr "${CLUSTER_NAME}-worker-${i}" | grep ipv4 | head -n1 | awk '{print $4}' | cut -d'/' -f1 2> /dev/null)
+        if [ -z "$IP" ]; then
+            virsh reset "${CLUSTER_NAME}-worker-${i}" > /dev/null 2>&1 && { echo "====> Rebooted Worker-$i"; }
+        fi
+        mco_stat=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@worker-${i}.${CLUSTER_NAME}.${BASE_DOM}" "sudo systemctl is-active machine-config-daemon-firstboot.service" 2> /dev/null) || true
+        # 如果服务已停止，后台启动它
+        if [ "${mco_stat}" = "failed" ]; then
+          echo "  --> Restarting machine-config-daemon-firstboot.service on Worker-${i}..."
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i sshkey "core@worker-${i}.${CLUSTER_NAME}.${BASE_DOM}" "nohup sudo systemctl start machine-config-daemon-firstboot.service > /dev/null 2>&1 &" 2> /dev/null
+        fi
+      done
+    fi
+
     if [ "$imgreg_patched" == "0" ]; then
         ./oc get configs.imageregistry.operator.openshift.io cluster &> /dev/null && \
        {
@@ -86,5 +101,5 @@ echo "######################################################"
 echo "          time taken = $TIME_TAKEN minutes"
 echo 
 
-./openshift-install --dir=install_dir wait-for install-complete --log-level=debug | tee install.log & 
+./openshift-install --dir=install_dir wait-for install-complete  
 

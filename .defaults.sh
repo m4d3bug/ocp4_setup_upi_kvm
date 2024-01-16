@@ -83,6 +83,9 @@ export SSH_PUB_KEY_FILE=""
 # --autostart-vms
 export AUTOSTART_VMS="no"
 
+# --master-unschedule
+export MAS_UNSCHEDULE="no"
+
 # -k, --keep-bootstrap
 export KEEP_BS="no"
 
