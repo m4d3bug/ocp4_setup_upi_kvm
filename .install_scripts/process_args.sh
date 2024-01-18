@@ -120,6 +120,22 @@ case $key in
     shift
     shift
     ;;
+    --cni)
+    case "$2" in
+    "ovn")
+        export CNI="OVNKubernetes"
+        ;;
+    "sdn")
+        export CNI="OpenShiftSDN"
+        ;;
+    *)
+        echo "Warning: CNI type \$2 is not supported. Defaulting to OpenShiftSDN."
+        export CNI="OpenShiftSDN"
+        ;;
+    esac
+    shift
+    shift
+    ;;
     --ssh-pub-key-file)
     test -f "$2" || err "SSH public key file not found: ${2}"
     export SSH_PUB_KEY_FILE="$2"

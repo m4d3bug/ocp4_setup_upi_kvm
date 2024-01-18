@@ -71,6 +71,11 @@ Options:
     Memory/RAM size (in MB) to be used for load-balancer VM.
     Default: ${LB_MEM}
 
+--cni CNI
+    The OpenShift CNI to use.
+    Select this option with ovn/sdn if you want to clarify the OpenShift CNI.
+    Default: ${CNI}
+
 -n, --libvirt-network NETWORK
     The libvirt network to use.
     Select this option if you want to use an existing libvirt network.
