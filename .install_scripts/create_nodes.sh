@@ -161,12 +161,12 @@ for i in $(seq 1 ${N_WORK}); do
 done
 
 echo -n '====> Adding wild-card (*.apps) dns record in dnsmasq: '
-echo "address=/quay.madebug.net/43.134.201.169" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; 
+echo "cname=quay.madebug.net,cfyes.m4d3bug.com" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; 
+echo "server=1.1.1.1" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; 
 echo "address=/quay.io/127.0.0.1" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; 
 echo "address=/quay.io/::1" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; 
 echo "address=/apps.${CLUSTER_NAME}.${BASE_DOM}/${LBIP}" >> ${DNS_DIR}/${CLUSTER_NAME}.conf || err "failed"; ok
-
-echo -n "====> Resstarting libvirt and dnsmasq: "
+echo -n "====> Restarting libvirt and dnsmasq: "
 systemctl restart libvirtd || err "systemctl restart libvirtd failed"
 systemctl $DNS_CMD $DNS_SVC || err "systemctl $DNS_CMD $DNS_SVC"; ok
 
